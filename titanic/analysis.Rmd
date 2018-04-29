@@ -1,0 +1,69 @@
+---
+title: "Titanic"
+author: "Tyler Jaszkowiak"
+date: "April 25, 2018"
+output: pdf_document
+---
+
+
+```{r load}
+library(readr)
+set.seed(123)
+setwd("C:/Users/Tyler/Documents/kaggle/titanic")
+dataset <- read_csv("train.csv", col_types = cols(
+    Embarked = col_factor(levels = c("S", "C", "Q")),
+    #Pclass = col_factor(levels = c("1", "2", "3")), # TODO treat both as numeric and factor, try different models -- seems better as a numeric variable, but that's biased. Need cross-validation
+    Sex = col_factor(levels = c("male", "female")),
+    Survived = col_logical()))
+# TODO if we remove age,embarked == NA in training: how do we deal in testing?
+dataset <- dataset[!is.na(dataset$Age),] # TODO ?
+dataset <- dataset[!is.na(dataset$Embarked),] # TODO ?
+#dataset$Age[is.na(dataset$Age)] <- mean(dataset$Age,na.rm=T) # TODO ?
+numeric.cols <- c(2,6,7,8,10) #c(2,3,6,7,8,10)
+training.size <- floor(0.8*nrow(dataset))
+sample.rows <- sample(nrow(dataset), training.size)
+training <- dataset[sample.rows,]
+validation <- dataset[-sample.rows,]
+```
+TODO just prune the columns here so some manual work can be cut out later
+
+```{r explore}
+# Survived
+mean(training$Survived)
+# Passenger Class
+summary(training$Pclass) / length(training$Pclass)
+# Age
+summary(training$Age)
+par(mfrow=c(1,2))
+hist(training$Age)
+qqnorm(training$Age)
+qqline(training$Age, col="red")
+# fit a Gamma distribution to Age?
+library("MASS")
+fit <- fitdistr(training$Age,"gamma")
+x <- seq(0,80,length=800)
+hist(training$Age,breaks=32)
+lines(x, length(training$Age)*dgamma(x, fit$estimate["shape"], rate=fit$estimate["rate"]), col=2, lty=2)
+```
+
+TODO is "embarked" significant in regression because of a correlation with class or fare? What's up with it?
+```{r explore-relationships}
+cor(training[!is.na(training[,c("Age")]),numeric.cols])
+pairs(training[!is.na(training[,c("Age")]),numeric.cols])
+```
+
+TODO "Survived ~." -- see if interactions help
+```{r regress}
+lf <- glm(Survived ~ Pclass + Sex + Age + SibSp + Parch + Fare,
+         family=binomial(link='logit'), data=training)
+summary(lf)
+plot(lf)
+```
+
+```{r fit}
+fitted.results <- predict(lf,newdata=subset(validation,select=c(3,5,6,7,8,10,12)),type='response')
+fitted.results <- ifelse(fitted.results > 0.5,1,0)
+
+misClasificError <- mean(fitted.results != validation$Survived)
+print(paste('Accuracy',1-misClasificError))
+```
