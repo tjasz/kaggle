@@ -23,7 +23,7 @@ numeric.cols <- c(2,6,7,8,10) #c(2,3,6,7,8,10)
 training.size <- floor(0.8*nrow(dataset))
 sample.rows <- sample(nrow(dataset), training.size)
 training <- dataset[sample.rows,]
-validation <- dataset[-sample.rows,]
+testing <- dataset[-sample.rows,]
 ```
 TODO just prune the columns here so some manual work can be cut out later
 
@@ -54,16 +54,34 @@ pairs(training[!is.na(training[,c("Age")]),numeric.cols])
 
 TODO "Survived ~." -- see if interactions help
 ```{r regress}
-lf <- glm(Survived ~ Pclass + Sex + Age + SibSp + Parch + Fare,
-         family=binomial(link='logit'), data=training)
+regression <- as.formula("Survived ~ Pclass + Sex + Age + SibSp + Parch + Fare")
+lf <- glm(regression, family=binomial(link='logit'), data=training)
 summary(lf)
 plot(lf)
+plot(training$PassengerId[lf$y==0],lf$fitted.values[lf$y==0])
+points(training$PassengerId[lf$y==1],lf$fitted.values[lf$y==1],col=2,pch=2)
 ```
 
-```{r fit}
-fitted.results <- predict(lf,newdata=subset(validation,select=c(3,5,6,7,8,10,12)),type='response')
-fitted.results <- ifelse(fitted.results > 0.5,1,0)
+```{r crossval}
+nFolds <- 10
+folds_i <- sample(rep(1:nFolds, length.out=nrow(training)))
+errors <- c()
+for (k in 1:nFolds)
+{
+  # draw sample
+  test_i <- which(folds_i == k)
+  cvTrain <- training[-test_i,]
+  validation <- training[test_i,]
 
-misClasificError <- mean(fitted.results != validation$Survived)
-print(paste('Accuracy',1-misClasificError))
+  # fit the model
+  lf <- glm(regression, family=binomial(link='logit'), data=cvTrain)
+  fitted.results <- predict(lf,newdata=subset(validation,select=c(3,5,6,7,8,10,12)),type='response') # TODO update this row selection
+  fitted.results <- ifelse(fitted.results > 0.5,1,0)
+  error <- mean(fitted.results != validation$Survived)
+  # TODO get both type 1 and type 2 error
+  errors <- append(errors, error)
+}
+
+print(paste('10F CV Accuracy: ',1-mean(errors)))
+boxplot(errors)
 ```
