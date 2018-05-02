@@ -10,12 +10,12 @@ output: pdf_document
 library(readr)
 set.seed(123)
 setwd("C:/Users/Tyler/Documents/kaggle/titanic")
-dataset <- read_csv("train.csv", col_types = cols(
+origdata <- read_csv("train.csv", col_types = cols(
     Embarked = col_factor(levels = c("S", "C", "Q")),
-    #Pclass = col_factor(levels = c("1", "2", "3")), # TODO treat both as numeric and factor, try different models -- seems better as a numeric variable, but that's biased. Need cross-validation
     Sex = col_factor(levels = c("male", "female")),
     Survived = col_logical()))
-# TODO if we remove age,embarked == NA in training: how do we deal in testing?
+dataset <- origdata
+# TODO if we remove age,embarked == NA in training: how do we deal in testing? in final submission?
 dataset <- dataset[!is.na(dataset$Age),] # TODO ?
 dataset <- dataset[!is.na(dataset$Embarked),] # TODO ?
 #dataset$Age[is.na(dataset$Age)] <- mean(dataset$Age,na.rm=T) # TODO ?
