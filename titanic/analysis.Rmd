@@ -14,18 +14,25 @@ origdata <- read_csv("train.csv", col_types = cols(
     Embarked = col_factor(levels = c("S", "C", "Q")),
     Sex = col_factor(levels = c("male", "female")),
     Survived = col_logical()))
-dataset <- origdata
+dataset <- subset(origdata, select=c("Survived","Pclass","Sex","Age","SibSp","Parch","Fare","Embarked"))
+# TODO include numeric transformations of other columns?
+
+
+
 # TODO if we remove age,embarked == NA in training: how do we deal in testing? in final submission?
+unlist(lapply(lapply(origdata, is.na), sum))
 dataset <- dataset[!is.na(dataset$Age),] # TODO ?
 dataset <- dataset[!is.na(dataset$Embarked),] # TODO ?
 #dataset$Age[is.na(dataset$Age)] <- mean(dataset$Age,na.rm=T) # TODO ?
-numeric.cols <- c(2,6,7,8,10) #c(2,3,6,7,8,10)
+```
+
+```{r partition}
 training.size <- floor(0.8*nrow(dataset))
 sample.rows <- sample(nrow(dataset), training.size)
 training <- dataset[sample.rows,]
 testing <- dataset[-sample.rows,]
 ```
-TODO just prune the columns here so some manual work can be cut out later
+
 
 ```{r explore}
 # Survived
@@ -46,10 +53,11 @@ hist(training$Age,breaks=32)
 lines(x, length(training$Age)*dgamma(x, fit$estimate["shape"], rate=fit$estimate["rate"]), col=2, lty=2)
 ```
 
-TODO is "embarked" significant in regression because of a correlation with class or fare? What's up with it?
+
 ```{r explore-relationships}
-cor(training[!is.na(training[,c("Age")]),numeric.cols])
-pairs(training[!is.na(training[,c("Age")]),numeric.cols])
+numeric.cols <- unlist(lapply(dataset, is.numeric))
+cor(training[,numeric.cols])
+pairs(training[,numeric.cols])
 ```
 
 TODO "Survived ~." -- see if interactions help
@@ -58,8 +66,8 @@ regression <- as.formula("Survived ~ Pclass + Sex + Age + SibSp + Parch + Fare")
 lf <- glm(regression, family=binomial(link='logit'), data=training)
 summary(lf)
 plot(lf)
-plot(training$PassengerId[lf$y==0],lf$fitted.values[lf$y==0])
-points(training$PassengerId[lf$y==1],lf$fitted.values[lf$y==1],col=2,pch=2)
+plot(lf$fitted.values[lf$y==0])
+points(lf$fitted.values[lf$y==1],col=2,pch=2)
 ```
 
 ```{r crossval}
@@ -75,7 +83,7 @@ for (k in 1:nFolds)
 
   # fit the model
   lf <- glm(regression, family=binomial(link='logit'), data=cvTrain)
-  fitted.results <- predict(lf,newdata=subset(validation,select=c(3,5,6,7,8,10,12)),type='response') # TODO update this row selection
+  fitted.results <- predict(lf,newdata=validation[,-1],type='response')
   fitted.results <- ifelse(fitted.results > 0.5,1,0)
   error <- mean(fitted.results != validation$Survived)
   # TODO get both type 1 and type 2 error
