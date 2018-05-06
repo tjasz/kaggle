@@ -16,7 +16,8 @@ origdata <- read_csv("train.csv", col_types = cols(
     Survived = col_logical()))
 unlist(lapply(lapply(origdata, is.na), sum))
 dataset <- subset(origdata, select=c("Survived","Pclass","Sex","Age","SibSp","Parch","Fare","Embarked"))
-# TODO include numeric transformations of other columns?
+# include numeric transformations of other columns? (TODO more)
+dataset$CabinNA <- is.na(origdata$Cabin)
 
 
 
