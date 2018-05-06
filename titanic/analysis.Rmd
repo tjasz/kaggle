@@ -15,16 +15,15 @@ origdata <- read_csv("train.csv", col_types = cols(
     Sex = col_factor(levels = c("male", "female")),
     Survived = col_logical()))
 unlist(lapply(lapply(origdata, is.na), sum))
-dataset <- subset(origdata, select=c("Survived","Pclass","Sex","Age","SibSp","Parch","Fare","Embarked"))
+dataset <- subset(origdata, select=c("Survived","Pclass","Sex","Age","SibSp","Parch","Fare"))
 # include numeric transformations of other columns? (TODO more)
 dataset$CabinNA <- is.na(origdata$Cabin)
 
 
 
-# TODO if we remove age,embarked == NA in training: how do we deal in testing? in final submission?
+# TODO if we remove age == NA in training: how do we deal in testing? in final submission?
 unlist(lapply(lapply(origdata, is.na), sum))
 dataset <- dataset[!is.na(dataset$Age),] # TODO ?
-dataset <- dataset[!is.na(dataset$Embarked),] # TODO ?
 #dataset$Age[is.na(dataset$Age)] <- mean(dataset$Age,na.rm=T) # TODO ?
 ```
 
