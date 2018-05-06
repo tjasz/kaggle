@@ -37,19 +37,15 @@ testing <- dataset[-sample.rows,]
 
 
 ```{r explore}
-# Survived
-mean(training$Survived)
-# Passenger Class
-summary(training$Pclass) / length(training$Pclass)
-# Age
-summary(training$Age)
+summary(training)
 par(mfrow=c(1,2))
 hist(training$Age)
 qqnorm(training$Age)
 qqline(training$Age, col="red")
 # fit a Gamma distribution to Age?
+# TODO different distr? maybe a mixture of two gammas?
 library("MASS")
-fit <- fitdistr(training$Age,"gamma")
+fit <- fitdistr(training$Age,"gamma") # TODO why are NaNs produced?
 x <- seq(0,80,length=800)
 hist(training$Age,breaks=32)
 lines(x, length(training$Age)*dgamma(x, fit$estimate["shape"], rate=fit$estimate["rate"]), col=2, lty=2)
@@ -57,7 +53,7 @@ lines(x, length(training$Age)*dgamma(x, fit$estimate["shape"], rate=fit$estimate
 
 
 ```{r explore-relationships}
-numeric.cols <- unlist(lapply(dataset, is.numeric))
+numeric.cols <- unlist(lapply(training, is.numeric))
 cor(training[,numeric.cols])
 pairs(training[,numeric.cols])
 ```
