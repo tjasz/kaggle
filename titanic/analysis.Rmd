@@ -14,6 +14,7 @@ origdata <- read_csv("train.csv", col_types = cols(
     Embarked = col_factor(levels = c("S", "C", "Q")),
     Sex = col_factor(levels = c("male", "female")),
     Survived = col_logical()))
+unlist(lapply(lapply(origdata, is.na), sum))
 dataset <- subset(origdata, select=c("Survived","Pclass","Sex","Age","SibSp","Parch","Fare","Embarked"))
 # TODO include numeric transformations of other columns?
 
