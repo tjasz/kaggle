@@ -64,7 +64,7 @@ pairs(training[,numeric.cols])
 
 TODO "Survived ~." -- see if interactions help
 ```{r regress}
-regression <- as.formula("Survived ~ Pclass + Sex + Age + SibSp + Parch + Fare")
+regression <- as.formula("Survived ~ .")
 lf <- glm(regression, family=binomial(link='logit'), data=training)
 summary(lf)
 plot(lf)
