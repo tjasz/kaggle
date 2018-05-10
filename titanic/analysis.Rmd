@@ -18,7 +18,8 @@ unlist(lapply(lapply(origdata, is.na), sum))
 dataset <- subset(origdata, select=c("Survived","Pclass","Sex","Age","SibSp","Parch","Fare"))
 # include numeric transformations of other columns? (TODO more)
 dataset$CabinNA <- is.na(origdata$Cabin)
-
+dataset$MissInName <- grepl("Miss.", origdata$Name)
+dataset$MrsInName <- grepl("Mrs.", origdata$Name)
 
 
 # TODO if we remove age == NA in training: how do we deal in testing? in final submission?
