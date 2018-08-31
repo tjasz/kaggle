@@ -20,6 +20,7 @@ dataset <- subset(origdata, select=c("Survived","Pclass","Sex","Age","SibSp","Pa
 dataset$CabinNA <- is.na(origdata$Cabin)
 dataset$MissInName <- grepl("Miss.", origdata$Name)
 dataset$MrsInName <- grepl("Mrs.", origdata$Name)
+dataset$isChild <- dataset$Age < 16
 
 
 # TODO if we remove age == NA in training: how do we deal in testing? in final submission?
