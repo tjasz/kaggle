@@ -51,6 +51,24 @@ hist(training$Age,breaks=32)
 lines(x, length(training$Age)*dgamma(x, fit$estimate["shape"], rate=fit$estimate["rate"]), col=2, lty=2)
 ```
 
+```{r survivalVsAge}
+# view relationship between age and survival
+ageBlock <- c()
+ageBlockSize <- c()
+ageBlockSurvival <- c()
+windowSize <- 4
+nWindows <- 21
+for (i in 1:nWindows)
+{
+  subset <- dataset$Survived[(i-1)*windowSize<=dataset$Age & dataset$Age<i*windowSize]
+  ageBlock <- c(ageBlock, sprintf("[%i, %i)",(i-1)*windowSize,i*windowSize))
+  ageBlockSize <- c(ageBlockSize, length(subset))
+  ageBlockSurvival <- c(ageBlockSurvival, mean(subset))
+}
+cbind(ageBlock, ageBlockSize, ageBlockSurvival)
+plot(1:nWindows*windowSize,ageBlockSurvival)
+```
+
 
 ```{r explore-relationships}
 numeric.cols <- unlist(lapply(training, is.numeric))
